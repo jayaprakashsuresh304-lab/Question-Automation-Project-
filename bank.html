@@ -1,0 +1,357 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="card mb-4">
+    <div class="card-header text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="bi bi-collection me-2"></i>Active Subject</h5>
+        <span class="badge bg-light text-dark">{{ bank.subject_code }} - Sem {{ bank.semester_number }}</span>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('select_subject_bank') }}" class="row g-3 align-items-end">
+            <div class="col-md-8">
+                <label class="form-label">Choose Subject & Semester</label>
+                <select name="bank_id" class="form-select" required>
+                    {% for b in banks %}
+                    <option value="{{ b.id }}" {% if b.id == active_bank_id %}selected{% endif %}>
+                        {{ b.subject_code }} - {{ b.subject_name }} (Sem {{ b.semester_number }}, {{ b.academic_year }})
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button type="submit" class="btn btn-outline-primary">Switch</button>
+            </div>
+            <div class="col-md-2 d-grid">
+                <button
+                    type="submit"
+                    formaction="{{ url_for('delete_subject_bank') }}"
+                    formmethod="post"
+                    class="btn btn-outline-danger"
+                    onclick="return confirm('Delete this subject bank and all its questions?');"
+                >
+                    Delete
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card mb-4">
+            <div class="card-header text-white">
+                <h5 class="mb-0"><i class="bi bi-plus-circle me-2"></i>Add Question</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" enctype="multipart/form-data" class="row g-3">
+                    <div class="col-md-2">
+                        <label class="form-label">Unit</label>
+                        <select name="unit" class="form-select" required>
+                            {% for u in units %}
+                            <option value="{{ u.unit_number }}">Unit {{ u.unit_number }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Marks</label>
+                        <select name="marks" class="form-select" required>
+                            <option value="2">2</option>
+                            <option value="13">13</option>
+                            <option value="15">15</option>
+                            <option value="16">16</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">CO</label>
+                        <input type="text" name="co" class="form-control" placeholder="CO1">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">BT Level</label>
+                        <input type="text" name="bt_level" class="form-control" placeholder="L2">
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Difficulty</label>
+                        <select name="difficulty" class="form-select">
+                            <option value="easy">easy</option>
+                            <option value="medium">medium</option>
+                            <option value="hard">hard</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">Status</label>
+                        <select name="status" class="form-select">
+                            <option value="approved">approved</option>
+                            <option value="draft">draft</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Choice Group</label>
+                        <input type="text" name="choice_group" class="form-control" placeholder="C1">
+                    </div>
+                    <div class="col-md-9">
+                        <label class="form-label">Diagram (optional)</label>
+                        <input type="file" name="question_diagram" class="form-control" accept=".png,.jpg,.jpeg,.webp,.svg">
+                    </div>
+                    <div class="col-12">
+                        <label class="form-label">Question Text</label>
+                        <textarea name="question_text" class="form-control" rows="3" required></textarea>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-save me-1"></i>Save Question
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header text-white">
+                <h5 class="mb-0"><i class="bi bi-upload me-2"></i>Bulk Upload Questions (Word/PDF)</h5>
+            </div>
+            <div class="card-body">
+                <form method="post" action="{{ url_for('upload_questions') }}" enctype="multipart/form-data" class="row g-3">
+                    <div class="col-md-9">
+                        <label class="form-label">Choose Word or PDF file</label>
+                        <input type="file" name="questions_file" class="form-control" accept=".docx,.pdf" required>
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">
+                            <i class="bi bi-file-earmark-arrow-up me-1"></i>Upload & Preview
+                        </button>
+                    </div>
+                </form>
+                <div class="small text-muted mt-2">
+                    File is parsed first, then shown in an editable preview screen before saving to database.
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header text-white d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="bi bi-journal-text me-2"></i>Question Bank</h5>
+                <span class="badge bg-light text-dark">{{ rows|length }} Questions</span>
+            </div>
+            <div class="card-body">
+                <form method="get" class="row g-2 mb-3">
+                    <div class="col-md-3">
+                        <label class="form-label">Marks</label>
+                        <select name="marks" class="form-control">
+                            <option value="all" {% if mark_filter == 'all' %}selected{% endif %}>All</option>
+                            <option value="2" {% if mark_filter == '2' %}selected{% endif %}>2 Marks</option>
+                            <option value="13" {% if mark_filter == '13' %}selected{% endif %}>13 Marks</option>
+                            <option value="15" {% if mark_filter == '15' %}selected{% endif %}>15 Marks</option>
+                            <option value="16" {% if mark_filter == '16' %}selected{% endif %}>16 Marks</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100">Filter</button>
+                    </div>
+                </form>
+
+                <form id="bulkDeleteForm" method="post" action="{{ url_for('delete_questions_bulk') }}"></form>
+                <div class="d-flex gap-2 mb-3">
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="selectAllQuestionsBtn">
+                        <i class="bi bi-check2-square me-1"></i>Select all shown
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary btn-sm" id="clearSelectedQuestionsBtn">
+                        <i class="bi bi-square me-1"></i>Clear
+                    </button>
+                    <button
+                        type="submit"
+                        form="bulkDeleteForm"
+                        class="btn btn-danger btn-sm"
+                        onclick="return confirm('Delete selected questions?');"
+                    >
+                        <i class="bi bi-trash me-1"></i>Delete Selected
+                    </button>
+                </div>
+
+                {% if rows %}
+                    {% if mark_filter == 'all' %}
+                        {% for m in [2, 13, 15, 16] %}
+                        <div class="card mb-3 border-0" style="box-shadow: 0 1px 8px rgba(0,0,0,0.08);">
+                            <div class="card-header {% if m == 2 %}bg-success{% elif m == 13 %}bg-primary{% else %}bg-warning text-dark{% endif %} text-white d-flex justify-content-between">
+                                <strong>
+                                    {% if m == 2 %}2 Marks Questions
+                                    {% elif m == 13 %}13 Marks Questions
+                                    {% elif m == 15 %}15 Marks Questions
+                                    {% else %}16 Marks Questions{% endif %}
+                                </strong>
+                                <span class="badge bg-light text-dark">{{ rows_by_marks[m]|length }}</span>
+                            </div>
+                            <div class="card-body p-0">
+                                {% if rows_by_marks[m] %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover mb-0">
+                                        <thead class="table-light">
+                                            <tr>
+                                                <th><input type="checkbox" class="form-check-input section-select" data-mark="{{ m }}"></th>
+                                                <th>#</th>
+                                                <th>Unit</th>
+                                                <th>Question</th>
+                                                <th>Diagram</th>
+                                                <th>CO</th>
+                                                <th>BT Level</th>
+                                                <th>Difficulty</th>
+                                                <th>Status</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for q in rows_by_marks[m] %}
+                                            <tr>
+                                                <td>
+                                                    <input
+                                                        type="checkbox"
+                                                        class="form-check-input bulk-question-check section-check section-{{ m }}"
+                                                        name="question_ids"
+                                                        value="{{ q.id }}"
+                                                        form="bulkDeleteForm"
+                                                    >
+                                                </td>
+                                                <td>{{ loop.index }}</td>
+                                                <td>Unit {{ q.unit_number }}</td>
+                                                <td>{{ q.question_text | format_question_text }}</td>
+                                                <td>
+                                                    {% set diagrams = split_diagram_paths(q.diagram_path) %}
+                                                    {% if diagrams %}
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        {% for img in diagrams %}
+                                                        <img src="{{ url_for('static', filename=img) }}" alt="diagram" style="max-width: 90px; max-height: 65px; border: 1px solid #ddd; border-radius: 4px;">
+                                                        {% endfor %}
+                                                    </div>
+                                                    {% else %}
+                                                    <span class="text-muted small">-</span>
+                                                    {% endif %}
+                                                </td>
+                                                <td><span class="badge bg-success">{{ q.co_mapping or '-' }}</span></td>
+                                                <td>{{ q.bt_level or '-' }}</td>
+                                                <td>{{ q.difficulty or '-' }}</td>
+                                                <td><span class="badge bg-info">{{ q.status }}</span></td>
+                                                <td>
+                                                    <a href="{{ url_for('edit_question', question_id=q.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                                    <form method="post" action="{{ url_for('delete_question', question_id=q.id) }}" style="display:inline;" onsubmit="return confirm('Delete this question?');">
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                                    </form>
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="p-3 text-muted">No questions available in this section.</div>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th><input type="checkbox" class="form-check-input" id="tableSelectAll"></th>
+                                        <th>#</th>
+                                        <th>Marks</th>
+                                        <th>Unit</th>
+                                        <th>Question</th>
+                                        <th>Diagram</th>
+                                        <th>CO</th>
+                                        <th>BT Level</th>
+                                        <th>Difficulty</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for q in rows %}
+                                    <tr>
+                                        <td>
+                                            <input
+                                                type="checkbox"
+                                                class="form-check-input bulk-question-check"
+                                                name="question_ids"
+                                                value="{{ q.id }}"
+                                                form="bulkDeleteForm"
+                                            >
+                                        </td>
+                                        <td>{{ loop.index }}</td>
+                                        <td><span class="badge bg-primary">{{ q.marks }}</span></td>
+                                        <td>Unit {{ q.unit_number }}</td>
+                                        <td>{{ q.question_text | format_question_text }}</td>
+                                        <td>
+                                            {% set diagrams = split_diagram_paths(q.diagram_path) %}
+                                            {% if diagrams %}
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for img in diagrams %}
+                                                <img src="{{ url_for('static', filename=img) }}" alt="diagram" style="max-width: 90px; max-height: 65px; border: 1px solid #ddd; border-radius: 4px;">
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted small">-</span>
+                                            {% endif %}
+                                        </td>
+                                        <td><span class="badge bg-success">{{ q.co_mapping or '-' }}</span></td>
+                                        <td>{{ q.bt_level or '-' }}</td>
+                                        <td>{{ q.difficulty or '-' }}</td>
+                                        <td><span class="badge bg-info">{{ q.status }}</span></td>
+                                        <td>
+                                            <a href="{{ url_for('edit_question', question_id=q.id) }}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                            <form method="post" action="{{ url_for('delete_question', question_id=q.id) }}" style="display:inline;" onsubmit="return confirm('Delete this question?');">
+                                                <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% endif %}
+                {% else %}
+                    <div class="alert alert-info">No questions found for these filters; please add some.</div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    const checks = Array.from(document.querySelectorAll('.bulk-question-check'));
+    const selectAllBtn = document.getElementById('selectAllQuestionsBtn');
+    const clearBtn = document.getElementById('clearSelectedQuestionsBtn');
+    const tableSelectAll = document.getElementById('tableSelectAll');
+
+    if (selectAllBtn) {
+        selectAllBtn.addEventListener('click', () => {
+            checks.forEach((cb) => { cb.checked = true; });
+            if (tableSelectAll) tableSelectAll.checked = true;
+            document.querySelectorAll('.section-select').forEach((cb) => { cb.checked = true; });
+        });
+    }
+
+    if (clearBtn) {
+        clearBtn.addEventListener('click', () => {
+            checks.forEach((cb) => { cb.checked = false; });
+            if (tableSelectAll) tableSelectAll.checked = false;
+            document.querySelectorAll('.section-select').forEach((cb) => { cb.checked = false; });
+        });
+    }
+
+    if (tableSelectAll) {
+        tableSelectAll.addEventListener('change', (e) => {
+            checks.forEach((cb) => { cb.checked = e.target.checked; });
+        });
+    }
+
+    document.querySelectorAll('.section-select').forEach((sectionToggle) => {
+        sectionToggle.addEventListener('change', (e) => {
+            const mark = e.target.getAttribute('data-mark');
+            document.querySelectorAll(`.section-${mark}`).forEach((cb) => {
+                cb.checked = e.target.checked;
+            });
+        });
+    });
+</script>
+{% endblock %}

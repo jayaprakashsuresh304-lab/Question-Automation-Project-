@@ -1,0 +1,570 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .paper-shell {
+    max-width: 980px;
+    margin: 0 auto;
+    padding: 12px;
+    background: #fff;
+    border: 1px solid #000;
+  }
+
+  .page-title {
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 8px;
+  }
+
+  .header-banner-wrap {
+    margin-bottom: 10px;
+    border: 1px solid #000;
+    background: #fff;
+  }
+
+  .header-banner {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  .header-fallback {
+    padding: 10px;
+  }
+
+  .meta-head {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
+  }
+
+  .meta-head td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    font-size: 0.95rem;
+  }
+
+  .spr-wrap {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .spr-boxes {
+    display: inline-flex;
+    gap: 0;
+  }
+
+  .spr-box {
+    width: 28px;
+    height: 24px;
+    border: 1px solid #000;
+    display: inline-block;
+  }
+
+  .meta-right {
+    text-align: right;
+    white-space: nowrap;
+  }
+
+  .paper-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+  }
+
+  .paper-table th,
+  .paper-table td {
+    border: 1px solid #000;
+    padding: 6px 8px;
+    font-size: 0.92rem;
+    vertical-align: top;
+  }
+
+  .paper-table th {
+    text-align: center;
+    font-weight: 700;
+    background: #fff;
+  }
+
+  .section-row td {
+    font-weight: 700;
+    text-align: center;
+    background: #fff;
+  }
+
+  .qnum-cell,
+  .meta-cell {
+    text-align: center;
+  }
+
+  .question-diagram {
+    display: block;
+    margin-top: 6px;
+    max-width: 240px;
+    max-height: 160px;
+  }
+
+  .approval-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+  }
+
+  .approval-table td,
+  .approval-table th {
+    border: 1px solid #000;
+    padding: 8px;
+    text-align: center;
+    font-size: 0.92rem;
+  }
+
+  .sign-space {
+    height: 55px;
+  }
+
+  .paper-actions {
+    margin-top: 14px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 10px;
+  }
+
+  .action-btn {
+    background: #0f172a;
+    color: #fff;
+    border: 1px solid #0f172a;
+    border-radius: 4px;
+    padding: 8px 14px;
+    font-weight: 600;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .action-btn-light {
+    background: #fff;
+    color: #0f172a;
+    border: 1px solid #0f172a;
+  }
+
+  .editable-field {
+    display: block;
+    min-height: 1.2em;
+  }
+
+  .editable-inline {
+    display: inline-block;
+    min-width: 30px;
+  }
+
+  .edit-mode .editable-field[contenteditable="true"] {
+    background: #fff8dc;
+    outline: 1px dashed #b45309;
+    border-radius: 2px;
+    padding: 2px;
+  }
+
+  .edit-note {
+    margin-top: 8px;
+    font-size: 0.84rem;
+    color: #334155;
+  }
+
+  @media (max-width: 768px) {
+    .paper-shell { padding: 8px; }
+    .paper-table th, .paper-table td { font-size: 0.82rem; padding: 5px; }
+    .meta-head td { font-size: 0.82rem; }
+  }
+
+  @media print {
+    @page {
+      size: auto;
+      margin: 10mm;
+    }
+
+    html,
+    body {
+      margin: 0 !important;
+      padding: 0 !important;
+      background: #fff !important;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .navbar,
+    .paper-actions,
+    .alert,
+    .btn-close { display: none !important; }
+
+    .container-fluid {
+      padding: 0 !important;
+      margin: 0 !important;
+    }
+
+    .editable-field[contenteditable="true"] {
+      outline: none !important;
+      background: transparent !important;
+      padding: 0 !important;
+    }
+
+    .paper-shell {
+      max-width: none;
+      margin: 0;
+      padding: 0;
+      border: none;
+      width: 100%;
+      box-sizing: border-box;
+      overflow: visible !important;
+    }
+
+    .header-banner-wrap,
+    .meta-head,
+    .approval-table {
+      page-break-inside: avoid;
+      break-inside: avoid-page;
+    }
+
+    .paper-table {
+      table-layout: fixed;
+      page-break-inside: auto;
+      break-inside: auto;
+    }
+
+    .paper-table th,
+    .paper-table td {
+      padding: 4px 5px !important;
+      font-size: 0.82rem !important;
+      line-height: 1.28;
+    }
+
+    .paper-table thead {
+      display: table-header-group;
+    }
+
+    .paper-table tfoot {
+      display: table-footer-group;
+    }
+
+    .paper-table tr,
+    .paper-table td,
+    .paper-table th {
+      page-break-inside: avoid !important;
+      break-inside: avoid-page !important;
+    }
+
+    .section-row {
+      page-break-after: avoid;
+      break-after: avoid-page;
+    }
+
+    .question-diagram {
+      max-width: 100% !important;
+      height: auto !important;
+      max-height: 22mm !important;
+      object-fit: contain;
+      margin-top: 3px;
+      margin-right: 4px;
+      display: inline-block;
+      vertical-align: top;
+    }
+
+    .editable-field {
+      overflow-wrap: anywhere;
+      word-break: break-word;
+    }
+  }
+</style>
+
+<section class="paper-shell">
+  <div class="header-banner-wrap">
+    <img
+      id="paperHeaderBanner"
+      class="header-banner"
+      src="{{ url_for('static', filename='uploads/college_header.png') }}"
+      alt="College Header"
+      onerror="this.style.display='none'; document.getElementById('paperHeaderFallback').style.display='block';"
+    >
+    <div id="paperHeaderFallback" class="header-fallback" style="display:none;">
+      <div class="page-title editable-field" data-editable="1">{{ college_name or 'MOUNT ZION COLLEGE OF ENGINEERING AND TECHNOLOGY' }}</div>
+      <div class="page-title editable-field" data-editable="1" style="font-size: 1rem; margin-top: -4px;">{{ exam_type or 'CONTINUOUS INTERNAL ASSESSMENT II' }}</div>
+    </div>
+  </div>
+
+  <table class="meta-head">
+    <tr>
+      <td colspan="2">
+        <div class="spr-wrap">
+          <strong>SPR No.:</strong>
+          <span class="spr-boxes">
+            <span class="spr-box"></span><span class="spr-box"></span><span class="spr-box"></span><span class="spr-box"></span><span class="spr-box"></span><span class="spr-box"></span>
+          </span>
+        </div>
+      </td>
+      <td><strong>Year/Dept.:</strong> <span class="editable-field editable-inline" data-editable="1">{{ semester or '-' }} / {{ department or '-' }}</span></td>
+      <td class="meta-right"><strong>Date:</strong> <span class="editable-field editable-inline" data-editable="1">{{ exam_date or '-' }}</span></td>
+    </tr>
+    <tr>
+      <td><strong class="editable-field editable-inline" data-editable="1">{{ bank.subject_code }}</strong></td>
+      <td colspan="2"><strong class="editable-field editable-inline" data-editable="1">{{ bank.subject_name }}</strong><br><strong>Time:</strong> <span class="editable-field editable-inline" data-editable="1">{{ exam_time or '-' }}</span></td>
+      <td class="meta-right"><strong class="editable-field editable-inline" data-editable="1">100</strong><br>Marks</td>
+    </tr>
+  </table>
+
+  <table class="paper-table">
+    <thead>
+      <tr>
+        <th style="width:7%;">Q.No</th>
+        <th style="width:58%;">QUESTIONS</th>
+        <th style="width:12%;">CO</th>
+        <th style="width:15%;">BT Level</th>
+        <th style="width:8%;">Marks</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="section-row">
+        <td colspan="5"><div class="editable-field" data-editable="1">PART a - 2 Mark Questions ({{ part_a_questions|length }} x 2 = 20)</div></td>
+      </tr>
+      {% for q in part_a_questions %}
+      <tr>
+        <td class="qnum-cell">{{ loop.index }}</td>
+        <td>
+          <div class="editable-field" data-editable="1">{{ q.question_text | format_question_text }}</div>
+          {% set diagrams = split_diagram_paths(q.diagram_path) %}
+          {% if diagrams %}
+          {% for img in diagrams %}
+          <img class="question-diagram" src="{{ url_for('static', filename=img) }}" alt="Question diagram">
+          {% endfor %}
+          {% endif %}
+        </td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ q.co_mapping or '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ q.bt_level or '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">2</span></td>
+      </tr>
+      {% endfor %}
+
+      <tr class="section-row">
+        <td colspan="5"><div class="editable-field" data-editable="1">PART B - 13 Mark Questions (5x13=65)</div></td>
+      </tr>
+      {% for i in range(5) %}
+      {% set qa = part_b_questions[i] if i < part_b_questions|length else None %}
+      {% set qb = part_b_questions[i+5] if (i+5) < part_b_questions|length else qa %}
+      <tr>
+        <td class="qnum-cell">{{ 11 + i }}.a</td>
+        <td>
+          {% if qa %}
+          <div class="editable-field" data-editable="1">{{ qa.question_text | format_question_text }}</div>
+          {% set diagrams = split_diagram_paths(qa.diagram_path) %}
+          {% if diagrams %}
+          {% for img in diagrams %}
+          <img class="question-diagram" src="{{ url_for('static', filename=img) }}" alt="Question diagram">
+          {% endfor %}
+          {% endif %}
+          {% else %}-{% endif %}
+        </td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ qa.co_mapping if qa else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ qa.bt_level if qa else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ qa.question_text | format_split_marks(13) if qa else '-' }}</span></td>
+      </tr>
+      <tr>
+        <td class="qnum-cell">OR</td>
+        <td colspan="4"></td>
+      </tr>
+      <tr>
+        <td class="qnum-cell">{{ 11 + i }}.b</td>
+        <td>
+          {% if qb %}
+          <div class="editable-field" data-editable="1">{{ qb.question_text | format_question_text }}</div>
+          {% set diagrams = split_diagram_paths(qb.diagram_path) %}
+          {% if diagrams %}
+          {% for img in diagrams %}
+          <img class="question-diagram" src="{{ url_for('static', filename=img) }}" alt="Question diagram">
+          {% endfor %}
+          {% endif %}
+          {% else %}-{% endif %}
+        </td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ qb.co_mapping if qb else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ qb.bt_level if qb else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ qb.question_text | format_split_marks(13) if qb else '-' }}</span></td>
+      </tr>
+      {% endfor %}
+
+      <tr class="section-row">
+        <td colspan="5"><div class="editable-field" data-editable="1">PART C - 15 Mark Questions(1x15=15)</div></td>
+      </tr>
+      <tr>
+        <td class="qnum-cell">16.a</td>
+        <td>
+          <div class="editable-field" data-editable="1">{{ part_c_questions[0].question_text | format_question_text if part_c_questions|length > 0 else '-' }}</div>
+          {% if part_c_questions|length > 0 %}
+          {% set diagrams = split_diagram_paths(part_c_questions[0].diagram_path) %}
+          {% for img in diagrams %}
+          <img class="question-diagram" src="{{ url_for('static', filename=img) }}" alt="Question diagram">
+          {% endfor %}
+          {% endif %}
+        </td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ part_c_questions[0].co_mapping if part_c_questions|length > 0 else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ part_c_questions[0].bt_level if part_c_questions|length > 0 else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">15</span></td>
+      </tr>
+      <tr>
+        <td class="qnum-cell">OR</td>
+        <td colspan="4"></td>
+      </tr>
+      <tr>
+        <td class="qnum-cell">16.b</td>
+        <td>
+          <div class="editable-field" data-editable="1">{{ part_c_questions[1].question_text | format_question_text if part_c_questions|length > 1 else '-' }}</div>
+          {% if part_c_questions|length > 1 %}
+          {% set diagrams = split_diagram_paths(part_c_questions[1].diagram_path) %}
+          {% for img in diagrams %}
+          <img class="question-diagram" src="{{ url_for('static', filename=img) }}" alt="Question diagram">
+          {% endfor %}
+          {% endif %}
+        </td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ part_c_questions[1].co_mapping if part_c_questions|length > 1 else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">{{ part_c_questions[1].bt_level if part_c_questions|length > 1 else '-' }}</span></td>
+        <td class="meta-cell"><span class="editable-field editable-inline" data-editable="1">15</span></td>
+      </tr>
+    </tbody>
+  </table>
+
+  <table class="approval-table">
+    <tr>
+      <th>Prepared by<br>(Course Handler)</th>
+      <th>Checked by<br>(Senior Faculty)</th>
+      <th>Approved by<br>(HoD)</th>
+    </tr>
+    <tr>
+      <td class="sign-space"></td>
+      <td class="sign-space"></td>
+      <td class="sign-space"></td>
+    </tr>
+  </table>
+
+  <div class="paper-actions">
+    <a class="action-btn action-btn-light" href="{{ url_for('recent_papers') }}">Recent History</a>
+    <button type="button" id="enableEditBtn" class="action-btn action-btn-light">Enable Edit</button>
+    <button type="button" id="lockEditBtn" class="action-btn action-btn-light" style="display:none;">Lock Edit</button>
+    <button type="button" id="saveEditsBtn" class="action-btn action-btn-light">Save Edits</button>
+    <button type="button" id="clearEditsBtn" class="action-btn action-btn-light">Reset Saved Edits</button>
+    {% if paper_id %}
+    <a class="action-btn" href="{{ url_for('download_saved_paper_word', paper_id=paper_id) }}">Save as Word (.docx)</a>
+    {% endif %}
+    <button class="action-btn" onclick="window.print()">Print / Save as PDF</button>
+  </div>
+</section>
+
+<script>
+  window.MathJax = {
+    tex: {
+      inlineMath: [['\\(', '\\)'], ['$', '$']],
+      displayMath: [['\\[', '\\]'], ['$$', '$$']]
+    },
+    options: {
+      skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+    }
+  };
+
+  const editableNodes = Array.from(document.querySelectorAll('[data-editable="1"]'));
+  const enableEditBtn = document.getElementById('enableEditBtn');
+  const lockEditBtn = document.getElementById('lockEditBtn');
+  const saveEditsBtn = document.getElementById('saveEditsBtn');
+  const clearEditsBtn = document.getElementById('clearEditsBtn');
+  const paperId = Number.parseInt('{{ paper_id|default(0) }}', 10) || null;
+  const serverSavedPayload = JSON.parse('{{ saved_edits_payload|default([])|tojson|safe }}');
+  const storageKey = `editable-paper:${window.location.pathname}`;
+
+  function setEditMode(enabled) {
+    document.body.classList.toggle('edit-mode', enabled);
+    editableNodes.forEach((node) => {
+      node.setAttribute('contenteditable', enabled ? 'true' : 'false');
+      node.setAttribute('spellcheck', enabled ? 'true' : 'false');
+    });
+    if (enableEditBtn) enableEditBtn.style.display = enabled ? 'none' : 'inline-block';
+    if (lockEditBtn) lockEditBtn.style.display = enabled ? 'inline-block' : 'none';
+  }
+
+  async function saveEdits() {
+    const payload = editableNodes.map((node) => node.innerHTML);
+    localStorage.setItem(storageKey, JSON.stringify(payload));
+
+    if (paperId) {
+      try {
+        const response = await fetch(`/papers/${paperId}/save-edits`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ edits: payload }),
+        });
+        if (!response.ok) {
+          throw new Error('Failed to save edits on server');
+        }
+        alert('Edits saved. You can reopen this paper from Recent History and continue editing.');
+        return;
+      } catch (_err) {
+        alert('Saved in this browser only. Server save failed.');
+        return;
+      }
+    }
+
+    alert('Edits saved in this browser.');
+  }
+
+  function applyPayload(payload) {
+    if (!Array.isArray(payload)) {
+      return;
+    }
+    payload.forEach((value, idx) => {
+      if (editableNodes[idx] && typeof value === 'string') {
+        editableNodes[idx].innerHTML = value;
+      }
+    });
+  }
+
+  function restoreEdits() {
+    if (Array.isArray(serverSavedPayload) && serverSavedPayload.length > 0) {
+      applyPayload(serverSavedPayload);
+    }
+
+    const raw = localStorage.getItem(storageKey);
+    if (!raw) {
+      return;
+    }
+    try {
+      const payload = JSON.parse(raw);
+      applyPayload(payload);
+    } catch (_err) {
+      // Ignore invalid saved payload and keep server-rendered content.
+    }
+  }
+
+  async function clearSavedEdits() {
+    localStorage.removeItem(storageKey);
+    if (paperId) {
+      try {
+        await fetch(`/papers/${paperId}/clear-edits`, { method: 'POST' });
+      } catch (_err) {
+        // Keep local clear behavior even if server clear fails.
+      }
+    }
+    window.location.reload();
+  }
+
+  if (enableEditBtn) {
+    enableEditBtn.addEventListener('click', () => setEditMode(true));
+  }
+  if (lockEditBtn) {
+    lockEditBtn.addEventListener('click', () => setEditMode(false));
+  }
+  if (saveEditsBtn) {
+    saveEditsBtn.addEventListener('click', saveEdits);
+  }
+  if (clearEditsBtn) {
+    clearEditsBtn.addEventListener('click', clearSavedEdits);
+  }
+
+  restoreEdits();
+  setEditMode(false);
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+{% endblock %}

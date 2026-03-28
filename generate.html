@@ -1,0 +1,532 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<style>
+  @media print {
+    #liveMonitorPanel,
+    #toggleMonitorBtn {
+      display: none !important;
+    }
+  }
+
+  @media (max-width: 992px) {
+    #liveMonitorPanel {
+      width: 280px;
+      right: 10px;
+      top: 70px;
+    }
+  }
+
+  @media (max-width: 576px) {
+    #liveMonitorPanel {
+      width: calc(100vw - 30px);
+      right: 15px;
+      max-height: 60vh;
+    }
+    #toggleMonitorBtn {
+      width: 45px;
+      height: 45px;
+    }
+  }
+</style>
+
+<!-- Live Selection Monitor (Sticky) -->
+<div id="liveMonitorPanel" style="position: fixed; right: 20px; top: 80px; width: 320px; max-height: 85vh; background: white; border: 2px solid #007bff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); z-index: 1030; overflow-y: auto; display: none;">
+  <div style="background: #007bff; color: white; padding: 12px 16px; font-weight: bold; border-radius: 6px 6px 0 0; display: flex; justify-content: space-between; align-items: center;">
+    <span><i class="bi bi-eye me-2"></i>Live Monitor</span>
+    <button id="closeMonitorBtn" type="button" style="background: none; border: none; color: white; cursor: pointer; font-size: 1.2rem;">×</button>
+  </div>
+  <div style="padding: 12px; font-size: 0.9rem;">
+    <div style="margin-bottom: 12px;">
+      <div style="background: #e8f4f8; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+        <strong>Part A</strong> <span id="monitor-part-a-count" style="float: right; background: #007bff; color: white; padding: 2px 6px; border-radius: 3px;">0/10</span>
+        <div style="clear: both; font-size: 0.85rem; margin-top: 4px; color: #555;">
+          Selected: <span id="monitor-part-a-selected">0</span> × 2 marks = <span id="monitor-part-a-marks">0</span>
+        </div>
+      </div>
+      <div style="background: #fff3e0; padding: 8px; border-radius: 4px; margin-bottom: 8px;">
+        <strong>Part B</strong> <span id="monitor-part-b-count" style="float: right; background: #ff9800; color: white; padding: 2px 6px; border-radius: 3px;">0/10</span>
+        <div style="clear: both; font-size: 0.85rem; margin-top: 4px; color: #555;">
+          Selected: <span id="monitor-part-b-selected">0</span> (for 5 OR pairs) = <span id="monitor-part-b-marks">0</span> marks
+        </div>
+      </div>
+      <div style="background: #f3e5f5; padding: 8px; border-radius: 4px;">
+        <strong>Part C</strong> <span id="monitor-part-c-count" style="float: right; background: #9c27b0; color: white; padding: 2px 6px; border-radius: 3px;">0/2</span>
+        <div style="clear: both; font-size: 0.85rem; margin-top: 4px; color: #555;">
+          Selected: <span id="monitor-part-c-selected">0</span> (Either/Or) = <span id="monitor-part-c-marks">0</span> marks
+        </div>
+      </div>
+    </div>
+    <hr style="margin: 12px 0; border: none; border-top: 1px solid #ddd;">
+    <div style="background: #e8f5e9; padding: 10px; border-radius: 4px; text-align: center; font-weight: bold;">
+      <div style="font-size: 1.1rem; color: #2e7d32;">
+        Total Marks: <span id="monitor-total-marks">0</span> / 100
+      </div>
+      <div style="font-size: 0.85rem; color: #666; margin-top: 4px;">
+        Questions: <span id="monitor-total-questions">0</span>
+      </div>
+    </div>
+    <div style="margin-top: 12px; font-size: 0.8rem; color: #999;">
+      <i class="bi bi-info-circle"></i> Selections update automatically
+    </div>
+  </div>
+</div>
+
+<!-- Toggle Monitor Button (Mobile/Sidebar) -->
+<button id="toggleMonitorBtn" type="button" class="btn btn-sm btn-outline-info" style="position: fixed; right: 14px; bottom: 80px; z-index: 1025; border-radius: 50%; width: 50px; height: 50px; padding: 0; display: flex; align-items: center; justify-content: center;">
+  <i class="bi bi-eye"></i>
+</button>
+
+<div class="card mb-4">
+  <div class="card-header text-white fw-bold">
+    <i class="bi bi-collection me-2"></i>Active Subject for Paper Generation
+  </div>
+  <div class="card-body">
+    <form method="post" action="{{ url_for('select_subject_bank') }}" class="row g-3 align-items-end">
+      <div class="col-md-8">
+        <label class="form-label">Choose Subject & Semester</label>
+        <select name="bank_id" class="form-select" required>
+          {% for b in banks %}
+          <option value="{{ b.id }}" {% if b.id == active_bank_id %}selected{% endif %}>
+            {{ b.subject_code }} - {{ b.subject_name }} (Sem {{ b.semester_number }}, {{ b.academic_year }})
+          </option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button type="submit" class="btn btn-outline-primary">Switch</button>
+      </div>
+      <div class="col-md-2 d-grid">
+        <button
+          type="submit"
+          formaction="{{ url_for('delete_subject_bank') }}"
+          formmethod="post"
+          class="btn btn-outline-danger"
+          onclick="return confirm('Delete this subject bank and all its questions?');"
+        >
+          Delete
+        </button>
+      </div>
+    </form>
+    <div class="small text-muted mt-2">
+      Only questions uploaded for this selected subject will be shown below.
+    </div>
+    <div class="mt-2">
+      <a href="{{ url_for('recent_papers') }}" class="btn btn-sm btn-outline-secondary">
+        <i class="bi bi-clock-history me-1"></i>Open Recent History
+      </a>
+    </div>
+  </div>
+</div>
+
+<form method="post" class="mb-4">
+  <div class="card mb-4">
+    <div class="card-header text-white fw-bold">
+      <i class="bi bi-diagram-3 me-2"></i>Select Lessons (Unit-wise)
+    </div>
+    <div class="card-body">
+      <div class="row g-2">
+        {% for u in units %}
+        <div class="col-md-2 col-6">
+          <label class="form-check border rounded p-2 bg-light w-100">
+            <input
+              class="form-check-input me-2"
+              type="checkbox"
+              name="selected_lessons"
+              value="{{ u.unit_number }}"
+              {% if u.unit_number in selected_lessons %}checked{% endif %}
+            >
+            <span class="form-check-label">Unit {{ u.unit_number }}</span>
+          </label>
+        </div>
+        {% endfor %}
+      </div>
+      <div class="small text-muted mt-2">
+        Questions will be uploaded and selected lesson-wise based on chosen units.
+      </div>
+    </div>
+  </div>
+
+  <!-- Paper Details -->
+  <div class="card mb-4">
+    <div class="card-header text-white fw-bold">
+      <i class="bi bi-file-earmark-text me-2"></i>Question Paper Details
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <label class="form-label">College Name</label>
+          <input type="text" name="college_name" class="form-control" required value="{{ college_name or '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Department</label>
+          <input type="text" name="department" class="form-control" required value="{{ department or '' }}">
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Assessment Type</label>
+          <select name="assessment_type" class="form-select" required>
+            <option value="" {% if not assessment_type %}selected{% endif %}>-- Select Assessment Type --</option>
+            <option value="CONTINUOUS INTERNAL ASSESSMENT I" {% if assessment_type == 'CONTINUOUS INTERNAL ASSESSMENT I' %}selected{% endif %}>CONTINUOUS INTERNAL ASSESSMENT I</option>
+            <option value="CONTINUOUS INTERNAL ASSESSMENT II" {% if assessment_type == 'CONTINUOUS INTERNAL ASSESSMENT II' %}selected{% endif %}>CONTINUOUS INTERNAL ASSESSMENT II</option>
+          </select>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Course Name</label>
+          <input type="text" name="course_name" class="form-control" value="{{ bank.subject_name }}" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Course Code</label>
+          <input type="text" name="course_code" class="form-control" value="{{ bank.subject_code }}" readonly>
+        </div>
+        <div class="col-md-6">
+          <label class="form-label">Exam Date</label>
+          <input type="date" name="exam_date" class="form-control" required value="{{ exam_date or today }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Semester</label>
+          <input type="text" name="semester" class="form-control" value="{{ semester or ('Semester ' ~ bank.semester_number) }}" required>
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Exam Type</label>
+          <input type="text" name="exam_type" class="form-control" value="{{ exam_type or 'Model Examination' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Exam Time</label>
+          <input type="text" name="exam_time" class="form-control" placeholder="1:30 PM - 4:30 PM" value="{{ exam_time or '' }}">
+        </div>
+        <div class="col-md-4">
+          <label class="form-label">Part A Count (2 marks)</label>
+          <input type="number" name="part_a_count" class="form-control" value="{{ part_a_count or 10 }}" min="1" max="20">
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Part A Selection -->
+  <div class="card mb-4">
+    <div class="card-header text-white fw-bold">
+      <i class="bi bi-list-ol me-2"></i>Part A — Select 10 Questions (2 Marks each)
+    </div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="badge bg-primary">Selected: <span id="countPartA">0</span></span>
+        <span class="badge bg-secondary">Required: <span id="requiredPartA">{{ part_a_count or 10 }}</span></span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="selectTopPartA">Select top required</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearPartA">Clear</button>
+      </div>
+      {% if part_a_pool %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 50px;">Select</th>
+              <th>#</th>
+              <th>Question</th>
+              <th>Unit</th>
+              <th>CO</th>
+              <th>BT Level</th>
+              <th>Difficulty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in part_a_pool %}
+            <tr>
+              <td>
+                <input type="checkbox" name="selected_question_ids" value="{{ q.id }}" class="form-check-input q-select q-select-a" {% if q.id in selected_question_ids %}checked{% endif %}>
+              </td>
+              <td>{{ loop.index }}</td>
+              <td>{{ q.question_text }}</td>
+              <td><span class="badge bg-secondary">Unit {{ q.unit_number or '-' }}</span></td>
+              <td><span class="badge bg-success">{{ q.co_mapping }}</span></td>
+              <td><span class="badge bg-warning text-dark">{{ q.bt_level }}</span></td>
+              <td>
+                {% if q.difficulty == 'easy' %}
+                  <span class="badge bg-success">Easy</span>
+                {% elif q.difficulty == 'medium' %}
+                  <span class="badge bg-warning text-dark">Medium</span>
+                {% else %}
+                  <span class="badge bg-danger">Hard</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-warning">No 2-mark questions available.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Part B Selection -->
+  <div class="card mb-4">
+    <div class="card-header text-white fw-bold">
+      <i class="bi bi-list-ol me-2"></i>Part B — Select 10 Questions (13 Marks each, for 5 OR pairs)
+    </div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="badge bg-primary">Selected: <span id="countPartB">0</span></span>
+        <span class="badge bg-secondary">Required: 10</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="selectTopPartB">Select top 10</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearPartB">Clear</button>
+      </div>
+      {% if part_b_pool %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 50px;">Select</th>
+              <th>#</th>
+              <th>Question</th>
+              <th>Unit</th>
+              <th>CO</th>
+              <th>BT Level</th>
+              <th>Difficulty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in part_b_pool %}
+            <tr>
+              <td>
+                <input type="checkbox" name="selected_question_ids" value="{{ q.id }}" class="form-check-input q-select q-select-b" {% if q.id in selected_question_ids %}checked{% endif %}>
+              </td>
+              <td>{{ loop.index }}</td>
+              <td>{{ q.question_text }}</td>
+              <td><span class="badge bg-secondary">Unit {{ q.unit_number or '-' }}</span></td>
+              <td><span class="badge bg-success">{{ q.co_mapping }}</span></td>
+              <td><span class="badge bg-warning text-dark">{{ q.bt_level }}</span></td>
+              <td>
+                {% if q.difficulty == 'easy' %}
+                  <span class="badge bg-success">Easy</span>
+                {% elif q.difficulty == 'medium' %}
+                  <span class="badge bg-warning text-dark">Medium</span>
+                {% else %}
+                  <span class="badge bg-danger">Hard</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-warning">No 13-mark questions available.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Part C Selection -->
+  <div class="card mb-4">
+    <div class="card-header text-white fw-bold">
+      <i class="bi bi-list-ol me-2"></i>Part C — Select 2 Questions (15/16 Marks) - Either/Or
+    </div>
+    <div class="card-body">
+      <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+        <span class="badge bg-primary">Selected: <span id="countPartC">0</span></span>
+        <span class="badge bg-secondary">Required: 2</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="selectTopPartC">Select top 2</button>
+        <button type="button" class="btn btn-sm btn-outline-secondary" id="clearPartC">Clear</button>
+      </div>
+      {% if part_c_pool %}
+      <div class="table-responsive">
+        <table class="table table-hover">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 50px;">Select</th>
+              <th>#</th>
+              <th>Question</th>
+              <th>Unit</th>
+              <th>Marks</th>
+              <th>CO</th>
+              <th>BT Level</th>
+              <th>Difficulty</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for q in part_c_pool %}
+            <tr>
+              <td>
+                <input type="checkbox" name="selected_question_ids" value="{{ q.id }}" class="form-check-input q-select q-select-c" {% if q.id in selected_question_ids %}checked{% endif %}>
+              </td>
+              <td>{{ loop.index }}</td>
+              <td>{{ q.question_text }}</td>
+              <td><span class="badge bg-secondary">Unit {{ q.unit_number or '-' }}</span></td>
+              <td><span class="badge bg-primary">{{ q.marks }}</span></td>
+              <td><span class="badge bg-success">{{ q.co_mapping }}</span></td>
+              <td><span class="badge bg-warning text-dark">{{ q.bt_level }}</span></td>
+              <td>
+                {% if q.difficulty == 'easy' %}
+                  <span class="badge bg-success">Easy</span>
+                {% elif q.difficulty == 'medium' %}
+                  <span class="badge bg-warning text-dark">Medium</span>
+                {% else %}
+                  <span class="badge bg-danger">Hard</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="alert alert-warning">No 15/16-mark questions available.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Submit Button -->
+  <div class="row">
+    <div class="col-12">
+      <button type="submit" class="btn btn-primary btn-lg w-100">
+        <i class="bi bi-file-earmark-check me-2"></i>Generate Question Paper
+      </button>
+    </div>
+  </div>
+</form>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+  const partACountInput = document.querySelector('input[name="part_a_count"]');
+  const checksA = Array.from(document.querySelectorAll('.q-select-a'));
+  const checksB = Array.from(document.querySelectorAll('.q-select-b'));
+  const checksC = Array.from(document.querySelectorAll('.q-select-c'));
+
+  const countPartAEl = document.getElementById('countPartA');
+  const countPartBEl = document.getElementById('countPartB');
+  const countPartCEl = document.getElementById('countPartC');
+  const requiredPartAEl = document.getElementById('requiredPartA');
+
+  // Live Monitor Elements
+  const liveMonitorPanel = document.getElementById('liveMonitorPanel');
+  const toggleMonitorBtn = document.getElementById('toggleMonitorBtn');
+  const closeMonitorBtn = document.getElementById('closeMonitorBtn');
+  const monitorPartACount = document.getElementById('monitor-part-a-count');
+  const monitorPartBCount = document.getElementById('monitor-part-b-count');
+  const monitorPartCCount = document.getElementById('monitor-part-c-count');
+  const monitorPartASelected = document.getElementById('monitor-part-a-selected');
+  const monitorPartBSelected = document.getElementById('monitor-part-b-selected');
+  const monitorPartCSelected = document.getElementById('monitor-part-c-selected');
+  const monitorPartAMarks = document.getElementById('monitor-part-a-marks');
+  const monitorPartBMarks = document.getElementById('monitor-part-b-marks');
+  const monitorPartCMarks = document.getElementById('monitor-part-c-marks');
+  const monitorTotalMarks = document.getElementById('monitor-total-marks');
+  const monitorTotalQuestions = document.getElementById('monitor-total-questions');
+
+  function checkedCount(checks) {
+    return checks.filter((cb) => cb.checked).length;
+  }
+
+  function syncCounts() {
+    const countA = checkedCount(checksA);
+    const countB = checkedCount(checksB);
+    const countC = checkedCount(checksC);
+
+    if (countPartAEl) countPartAEl.textContent = String(countA);
+    if (countPartBEl) countPartBEl.textContent = String(countB);
+    if (countPartCEl) countPartCEl.textContent = String(countC);
+
+    if (requiredPartAEl && partACountInput) {
+      const value = Number.parseInt(partACountInput.value || '10', 10);
+      requiredPartAEl.textContent = String(Number.isNaN(value) ? 10 : Math.max(1, Math.min(20, value)));
+    }
+
+    // Update Live Monitor
+    const requiredA = Number.parseInt(partACountInput?.value || '10', 10) || 10;
+    const requiredB = 10;
+    const requiredC = 2;
+
+    const marksA = countA * 2;
+    const marksB = countB * 13;
+    const marksC = countC * 15;
+    const totalMarks = marksA + marksB + marksC;
+    const totalQuestions = countA + countB + countC;
+
+    monitorPartACount.textContent = `${countA}/${requiredA}`;
+    monitorPartBCount.textContent = `${countB}/${requiredB}`;
+    monitorPartCCount.textContent = `${countC}/${requiredC}`;
+
+    monitorPartASelected.textContent = countA;
+    monitorPartBSelected.textContent = countB;
+    monitorPartCSelected.textContent = countC;
+
+    monitorPartAMarks.textContent = marksA;
+    monitorPartBMarks.textContent = marksB;
+    monitorPartCMarks.textContent = marksC;
+
+    monitorTotalMarks.textContent = totalMarks;
+    monitorTotalQuestions.textContent = totalQuestions;
+
+    // Update monitor colors based on completion
+    if (countA >= requiredA) monitorPartACount.style.background = '#28a745';
+    else if (countA > 0) monitorPartACount.style.background = '#ffc107';
+    else monitorPartACount.style.background = '#007bff';
+
+    if (countB >= requiredB) monitorPartBCount.style.background = '#28a745';
+    else if (countB > 0) monitorPartBCount.style.background = '#ffc107';
+    else monitorPartBCount.style.background = '#ff9800';
+
+    if (countC >= requiredC) monitorPartCCount.style.background = '#28a745';
+    else if (countC > 0) monitorPartCCount.style.background = '#ffc107';
+    else monitorPartCCount.style.background = '#9c27b0';
+  }
+
+  function clearChecks(checks) {
+    checks.forEach((cb) => { cb.checked = false; });
+    syncCounts();
+  }
+
+  function selectTop(checks, count) {
+    checks.forEach((cb, idx) => { cb.checked = idx < count; });
+    syncCounts();
+  }
+
+  document.querySelectorAll('.q-select').forEach((cb) => {
+    cb.addEventListener('change', syncCounts);
+  });
+
+  if (partACountInput) {
+    partACountInput.addEventListener('input', syncCounts);
+  }
+
+  const selectTopPartA = document.getElementById('selectTopPartA');
+  const clearPartA = document.getElementById('clearPartA');
+  const selectTopPartB = document.getElementById('selectTopPartB');
+  const clearPartB = document.getElementById('clearPartB');
+  const selectTopPartC = document.getElementById('selectTopPartC');
+  const clearPartC = document.getElementById('clearPartC');
+
+  if (selectTopPartA) {
+    selectTopPartA.addEventListener('click', () => {
+      const required = Number.parseInt(partACountInput?.value || '10', 10);
+      selectTop(checksA, Number.isNaN(required) ? 10 : Math.max(1, Math.min(20, required)));
+    });
+  }
+  if (clearPartA) clearPartA.addEventListener('click', () => clearChecks(checksA));
+
+  if (selectTopPartB) selectTopPartB.addEventListener('click', () => selectTop(checksB, 10));
+  if (clearPartB) clearPartB.addEventListener('click', () => clearChecks(checksB));
+
+  if (selectTopPartC) selectTopPartC.addEventListener('click', () => selectTop(checksC, 2));
+  if (clearPartC) clearPartC.addEventListener('click', () => clearChecks(checksC));
+
+  // Live Monitor Toggle
+  if (toggleMonitorBtn) {
+    toggleMonitorBtn.addEventListener('click', () => {
+      liveMonitorPanel.style.display = liveMonitorPanel.style.display === 'none' ? 'block' : 'none';
+      toggleMonitorBtn.style.opacity = liveMonitorPanel.style.display === 'none' ? '0.6' : '1';
+    });
+  }
+
+  if (closeMonitorBtn) {
+    closeMonitorBtn.addEventListener('click', () => {
+      liveMonitorPanel.style.display = 'none';
+      toggleMonitorBtn.style.opacity = '0.6';
+    });
+  }
+
+  syncCounts();
+</script>
+{% endblock %}

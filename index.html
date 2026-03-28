@@ -1,0 +1,253 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% if no_bank %}
+<div class="card">
+    <div class="card-body text-center py-5">
+        <i class="bi bi-exclamation-triangle fs-1 text-warning"></i>
+        <h4 class="mt-3">No Question Bank Found</h4>
+        <p class="text-muted">The database has not been initialized. Please run:</p>
+        <code class="bg-light p-2 rounded d-block mb-3">python database_schema.py</code>
+        <p class="text-muted small">This will create the database with sample subject, semester, and question bank.</p>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-header text-white fw-bold">
+        <i class="bi bi-plus-circle me-2"></i>Create Your First Subject Bank
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('create_subject_bank') }}" class="row g-3">
+            <div class="col-md-3">
+                <label class="form-label">Subject Code</label>
+                <input type="text" name="subject_code" class="form-control" placeholder="CCW332" required>
+            </div>
+            <div class="col-md-5">
+                <label class="form-label">Subject Name</label>
+                <input type="text" name="subject_name" class="form-control" placeholder="Digital Marketing" required>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Semester</label>
+                <select name="semester_number" class="form-select" required>
+                    {% for sem in [1,2,3,4,5,6,7,8] %}
+                    <option value="{{ sem }}">{{ sem }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-2">
+                <label class="form-label">Academic Year</label>
+                <input type="text" name="academic_year" class="form-control" placeholder="2025-2026" required>
+            </div>
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Create Subject Bank</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% else %}
+<div class="card mb-4">
+    <div class="card-header text-white fw-bold">
+        <i class="bi bi-collection me-2"></i>Subject & Semester Management
+    </div>
+    <div class="card-body">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <form method="post" action="{{ url_for('create_subject_bank') }}" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Subject Code</label>
+                        <input type="text" name="subject_code" class="form-control" placeholder="CCW332" required>
+                    </div>
+                    <div class="col-md-8">
+                        <label class="form-label">Subject Name</label>
+                        <input type="text" name="subject_name" class="form-control" placeholder="Digital Marketing" required>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label">Department</label>
+                        <input type="text" name="department" class="form-control" placeholder="Computer Science">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Semester</label>
+                        <select name="semester_number" class="form-select" required>
+                            {% for sem in [1,2,3,4,5,6,7,8] %}
+                            <option value="{{ sem }}">{{ sem }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-4">
+                        <label class="form-label">Academic Year</label>
+                        <input type="text" name="academic_year" class="form-control" placeholder="2025-2026" required>
+                    </div>
+                    <div class="col-12">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-plus-circle me-1"></i>Create / Select Subject Bank
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="col-lg-5">
+                <form method="post" action="{{ url_for('select_subject_bank') }}" class="row g-3">
+                    <div class="col-12">
+                        <label class="form-label">Switch Active Subject</label>
+                        <select name="bank_id" class="form-select" required>
+                            {% for b in banks %}
+                            <option value="{{ b.id }}" {% if b.id == active_bank_id %}selected{% endif %}>
+                                {{ b.subject_code }} - {{ b.subject_name }} (Sem {{ b.semester_number }}, {{ b.academic_year }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 d-grid">
+                        <button type="submit" class="btn btn-outline-primary">
+                            <i class="bi bi-arrow-repeat me-1"></i>Use This Subject
+                        </button>
+                    </div>
+                </form>
+                <form method="post" action="{{ url_for('delete_subject_bank') }}" class="row g-3 mt-2">
+                    <div class="col-12">
+                        <label class="form-label">Delete Subject Bank</label>
+                        <select name="bank_id" class="form-select" required>
+                            {% for b in banks %}
+                            <option value="{{ b.id }}">
+                                {{ b.subject_code }} - {{ b.subject_name }} (Sem {{ b.semester_number }}, {{ b.academic_year }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-12 d-grid">
+                        <button
+                            type="submit"
+                            class="btn btn-outline-danger"
+                            onclick="return confirm('Delete this subject bank and all its questions?');"
+                        >
+                            <i class="bi bi-trash me-1"></i>Delete Selected Subject
+                        </button>
+                    </div>
+                </form>
+                <div class="small text-muted mt-2">
+                    Questions, uploads, and paper generation will be scoped only to the selected subject and semester.
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg,#1a237e,#3949ab);">
+            <div class="card-body d-flex align-items-center">
+                <i class="bi bi-journal-text fs-1 me-3"></i>
+                <div>
+                    <div class="fs-2 fw-bold">{{ total }}</div>
+                    <div>Total Questions</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg,#1b5e20,#388e3c);">
+            <div class="card-body d-flex align-items-center">
+                <i class="bi bi-file-earmark-check fs-1 me-3"></i>
+                <div>
+                    <div class="fs-2 fw-bold">{{ counts[2] }}</div>
+                    <div>2 Marks Pool</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="card text-white" style="background: linear-gradient(135deg,#b71c1c,#e53935);">
+            <div class="card-body d-flex align-items-center">
+                <i class="bi bi-list-ul fs-1 me-3"></i>
+                <div>
+                    <div class="fs-2 fw-bold">{{ counts[13] }}</div>
+                    <div>13/15 Marks Pool</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header text-white fw-bold">
+                <i class="bi bi-info-circle me-2"></i>Active Question Bank
+            </div>
+            <div class="card-body">
+                <table class="table table-hover mb-0">
+                    <tbody>
+                        <tr>
+                            <td><strong>Subject Code:</strong></td>
+                            <td>{{ bank.subject_code }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Subject Name:</strong></td>
+                            <td>{{ bank.subject_name }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Semester:</strong></td>
+                            <td>Semester {{ bank.semester_number }}</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Academic Year:</strong></td>
+                            <td>{{ bank.academic_year }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header text-white fw-bold">
+                <i class="bi bi-lightning me-2"></i>Quick Actions
+            </div>
+            <div class="card-body d-grid gap-2">
+                <a href="{{ url_for('questions') }}" class="btn btn-outline-primary">
+                    <i class="bi bi-plus-circle me-2"></i>Add Question
+                </a>
+                <a href="{{ url_for('questions') }}" class="btn btn-outline-secondary">
+                    <i class="bi bi-journal-text me-2"></i>View Questions
+                </a>
+                <a href="{{ url_for('generate') }}" class="btn btn-primary">
+                    <i class="bi bi-file-earmark-text me-2"></i>Generate Paper
+                </a>
+                {% if total == 0 %}
+                <form action="{{ url_for('seed_demo') }}" method="post" class="mt-2">
+                    <button class="btn btn-success w-100" type="submit">
+                        <i class="bi bi-plus me-2"></i>Add Demo Questions
+                    </button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header text-white fw-bold">
+                <i class="bi bi-book me-2"></i>Quick Start Guide
+            </div>
+            <div class="card-body">
+                <ol class="mb-0">
+                    <li>Go to <strong>Question Bank</strong> to add your questions</li>
+                    <li>Fill in: Question text, Marks (2/13/15), CO, Bloom's Level</li>
+                    <li>Go to <strong>Generate Paper</strong> to create question papers</li>
+                    <li>System automatically aligns to your template:
+                        <ul>
+                            <li>Part A: 10 × 2 marks (Total: 20 marks)</li>
+                            <li>Part B: 5 × 13 marks (Total: 65 marks)</li>
+                            <li>Part C: 1 × 15/16 marks either/or (Total: 15 marks)</li>
+                        </ul>
+                    </li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}

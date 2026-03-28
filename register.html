@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block auth_content %}
+<div class="min-vh-100 d-flex align-items-center justify-content-center"
+     style="background: linear-gradient(135deg, #1a237e, #283593);">
+    <div class="card p-4" style="width: 460px;">
+        <div class="text-center mb-4">
+            <i class="bi bi-person-plus-fill text-primary" style="font-size: 3rem;"></i>
+            <h4 class="fw-bold mt-2">Create New User</h4>
+            <p class="text-muted small">Register and login with your own account</p>
+        </div>
+
+        <form method="POST">
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Full Name</label>
+                <input type="text" name="full_name" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Username</label>
+                <input type="text" name="username" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Email Address</label>
+                <input type="email" name="email" class="form-control" required>
+            </div>
+            <div class="mb-3">
+                <label class="form-label fw-semibold">Password</label>
+                <input type="password" name="password" class="form-control" required>
+                <small class="text-muted">Use at least 10 characters with uppercase, lowercase, number, and special character.</small>
+            </div>
+            <div class="mb-4">
+                <label class="form-label fw-semibold">Confirm Password</label>
+                <input type="password" name="confirm_password" class="form-control" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100 py-2 fw-bold">
+                <i class="bi bi-check2-circle me-2"></i>Register
+            </button>
+        </form>
+
+        <div class="text-center mt-3">
+            <a href="{{ url_for('login') }}" class="small">Already have an account? Login</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

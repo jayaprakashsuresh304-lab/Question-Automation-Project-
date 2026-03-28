@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Paper Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css" rel="stylesheet">
+    <style>
+        body { background-color: #f0f2f5; }
+        .navbar { background: linear-gradient(135deg, #1a237e, #283593); position: sticky; top: 0; z-index: 1030; }
+        .quick-nav-floating { position: fixed; right: 14px; bottom: 14px; z-index: 1040; display: flex; flex-direction: column; gap: 8px; }
+        .quick-nav-floating .btn { border-radius: 999px; box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18); }
+        @media (min-width: 992px) { .quick-nav-floating { display: none; } }
+        @media print { .quick-nav-floating { display: none !important; } }
+        .card { border: none; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.08); }
+        .card-header { border-radius: 12px 12px 0 0 !important; background-color: #1a237e !important; }
+        .btn-primary { background: #1a237e; border-color: #1a237e; }
+        .btn-primary:hover { background: #283593; border-color: #283593; }
+        .badge-co { background-color: #1a237e; }
+    </style>
+</head>
+<body>
+
+{% set logged_in = session.get('logged_in') %}
+{% if logged_in %}
+<nav class="navbar navbar-expand-lg navbar-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">
+            <i class="bi bi-mortarboard-fill me-2"></i>Question Paper Generator
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('index') }}">
+                        <i class="bi bi-speedometer2"></i> Home
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('questions') }}">
+                        <i class="bi bi-journal-text"></i> Question Bank
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('generate') }}">
+                        <i class="bi bi-file-earmark-text"></i> Generate Paper
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('recent_papers') }}">
+                        <i class="bi bi-clock-history"></i> Recent Papers
+                    </a>
+                </li>
+                {% if session.get('user_role') == 'admin' %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('admin_users') }}">
+                        <i class="bi bi-shield-lock"></i> Admin
+                    </a>
+                </li>
+                {% endif %}
+                <li class="nav-item">
+                    <a class="nav-link" href="{{ url_for('logout') }}">
+                        <i class="bi bi-box-arrow-right"></i> Logout
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+{% endif %}
+
+{% if logged_in %}
+<div class="quick-nav-floating">
+    <a class="btn btn-primary btn-sm" href="{{ url_for('index') }}" title="Home"><i class="bi bi-house-door"></i></a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('questions') }}" title="Question Bank"><i class="bi bi-journal-text"></i></a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('generate') }}" title="Generate Paper"><i class="bi bi-file-earmark-text"></i></a>
+    <a class="btn btn-primary btn-sm" href="{{ url_for('recent_papers') }}" title="Recent Papers"><i class="bi bi-clock-history"></i></a>
+    <button type="button" class="btn btn-outline-dark btn-sm" onclick="window.scrollTo({top:0,behavior:'smooth'})" title="Top"><i class="bi bi-arrow-up"></i></button>
+</div>
+{% endif %}
+
+<div class="container-fluid p-4">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+        <div class="alert alert-{{ category }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+        {% endfor %}
+    {% endwith %}
+
+    {% block auth_content %}{% endblock %}
+    {% block content %}{% endblock %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

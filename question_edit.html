@@ -1,0 +1,183 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .edit-shell {
+    max-width: 980px;
+    margin: 0 auto;
+    animation: editFadeUp 0.35s ease-out;
+  }
+
+  .edit-card {
+    border: 1px solid #d8e2ff;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 14px 34px rgba(30, 58, 138, 0.12);
+  }
+
+  .edit-header {
+    background: linear-gradient(120deg, #1e40af 0%, #2563eb 60%, #3b82f6 100%);
+    color: #fff;
+    padding: 16px 20px;
+  }
+
+  .edit-id-badge {
+    display: inline-block;
+    margin-top: 8px;
+    background: rgba(255, 255, 255, 0.2);
+    border: 1px solid rgba(255, 255, 255, 0.35);
+    border-radius: 999px;
+    padding: 4px 10px;
+    font-size: 0.85rem;
+  }
+
+  .edit-body {
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+    padding: 20px;
+  }
+
+  .field-label {
+    font-weight: 600;
+    color: #334155;
+    margin-bottom: 6px;
+  }
+
+  .diagram-preview {
+    max-width: 280px;
+    max-height: 190px;
+    border-radius: 10px;
+    border: 1px solid #cbd8ff;
+    background: #fff;
+    padding: 6px;
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+  }
+
+  .question-textarea {
+    min-height: 170px;
+  }
+
+  .action-wrap {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+  }
+
+  .btn-gradient {
+    background: linear-gradient(120deg, #1d4ed8, #2563eb);
+    border: none;
+    color: #fff;
+    font-weight: 600;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  }
+
+  .btn-gradient:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 22px rgba(37, 99, 235, 0.25);
+    color: #fff;
+  }
+
+  @keyframes editFadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+</style>
+
+<section class="edit-shell">
+  <div class="edit-card">
+    <div class="edit-header">
+      <h4 class="mb-0">Edit Question</h4>
+      <div class="edit-id-badge">Question #{{ question.id }} - {{ bank.subject_name }}</div>
+    </div>
+
+    <div class="edit-body">
+      <form method="post" enctype="multipart/form-data" class="row g-3">
+        <div class="col-md-2">
+          <label class="field-label">Unit</label>
+          <select name="unit" class="form-select" required>
+            {% for u in units %}
+            <option value="{{ u.unit_number }}" {% if u.unit_number == question.unit_number %}selected{% endif %}>Unit {{ u.unit_number }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="field-label">Marks</label>
+          <select name="marks" class="form-select" required>
+            <option value="2" {% if question.marks == 2 %}selected{% endif %}>2</option>
+            <option value="13" {% if question.marks == 13 %}selected{% endif %}>13</option>
+            <option value="15" {% if question.marks == 15 %}selected{% endif %}>15</option>
+            <option value="16" {% if question.marks == 16 %}selected{% endif %}>16</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="field-label">CO</label>
+          <input type="text" name="co" class="form-control" value="{{ question.co_mapping or '' }}" placeholder="CO2">
+        </div>
+
+        <div class="col-md-2">
+          <label class="field-label">BT Level</label>
+          <input type="text" name="bt_level" class="form-control" value="{{ question.bt_level or '' }}" placeholder="L3">
+        </div>
+
+        <div class="col-md-2">
+          <label class="field-label">Difficulty</label>
+          <select name="difficulty" class="form-select">
+            <option value="easy" {% if question.difficulty == 'easy' %}selected{% endif %}>easy</option>
+            <option value="medium" {% if question.difficulty == 'medium' %}selected{% endif %}>medium</option>
+            <option value="hard" {% if question.difficulty == 'hard' %}selected{% endif %}>hard</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <label class="field-label">Status</label>
+          <select name="status" class="form-select">
+            <option value="approved" {% if question.status == 'approved' %}selected{% endif %}>approved</option>
+            <option value="draft" {% if question.status == 'draft' %}selected{% endif %}>draft</option>
+          </select>
+        </div>
+
+        <div class="col-md-4">
+          <label class="field-label">Choice Group (OR pair)</label>
+          <input type="text" name="choice_group" class="form-control" value="{{ question.choice_group or '' }}" placeholder="C1">
+        </div>
+
+        <div class="col-12">
+          <label class="field-label">Question Text</label>
+          <textarea name="question_text" class="form-control question-textarea" required>{{ question.question_text }}</textarea>
+        </div>
+
+        <div class="col-md-6">
+          <label class="field-label">Replace Diagram (optional)</label>
+          <input type="file" name="question_diagram" class="form-control" accept=".png,.jpg,.jpeg,.webp,.svg">
+        </div>
+
+        {% if current_diagrams %}
+        <div class="col-md-6">
+          <label class="field-label d-block">Current Diagram</label>
+          <div class="d-flex flex-wrap gap-2">
+            {% for img in current_diagrams %}
+            <img src="{{ url_for('static', filename=img) }}" alt="current diagram" class="diagram-preview">
+            {% endfor %}
+          </div>
+          <div class="form-check mt-2">
+            <input type="checkbox" class="form-check-input" id="remove_diagram" name="remove_diagram">
+            <label class="form-check-label" for="remove_diagram">Remove all current diagrams</label>
+          </div>
+        </div>
+        {% endif %}
+
+        <div class="col-12 action-wrap mt-3">
+          <a class="btn btn-outline-secondary" href="{{ url_for('questions') }}">Cancel</a>
+          <button class="btn btn-gradient" type="submit">Update Question</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</section>
+{% endblock %}
